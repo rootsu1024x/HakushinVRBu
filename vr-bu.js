@@ -4,7 +4,8 @@ var VRBu = {
   rotationLimit:81.0,
   pi:3.114514,
   windowWidth:NaN,
-  windowHeight:NaN
+  windowHeight:NaN,
+  pointerDown:false
 };
 
 function updateSize() {
@@ -73,19 +74,35 @@ function makeDualCamera(parent,center,width){
 
 
 function pointerDown(e){
+  e.preventDefault();
+  e.stopPropagation();
   var rect = e.target.getBoundingClientRect();
-  VRBu.pointerX = rect.left - e.clientX;
-  VRBu.pointerY = rect.top - e.clientY;
+  if(e.touches){
+    VRBu.pointerX = rect.left - e.touches[0].clientX;
+    VRBu.pointerY = rect.top - e.touches[0].clientY;
+  }else{
+    VRBu.pointerX = rect.left - e.clientX;
+    VRBu.pointerY = rect.top - e.clientY;
+  }
   VRBu.pointerDown = true;
 }
 
 function pointerMove(e){
+  e.preventDefault();
+  e.stopPropagation();
   if(!VRBu.pointerDown){
     return;
   }
   var rect = e.target.getBoundingClientRect();
-  var pointerX = rect.left - e.clientX;
-  var pointerY = rect.top - e.clientY;
+  var pointerX = 0;
+  var pointerY = 0;
+  if(e.touches){
+    pointerX = rect.left - e.touches[0].clientX;
+    pointerY = rect.top - e.touches[0].clientY;
+  }else{
+    pointerX = rect.left - e.clientX;
+    pointerY = rect.top - e.clientY;
+  }
   var diffX = pointerX - VRBu.pointerX;
   var diffY = pointerY - VRBu.pointerY;
   var angleX = (VRBu.camera.camera.rotation.x + diffY * VRBu.rotationRateY) / Math.PI * 180;
@@ -97,11 +114,13 @@ function pointerMove(e){
 }
 
 function pointerOut(e){
+  e.preventDefault();
+  e.stopPropagation();
   VRBu.pointerDown = false;
 }
 
 window.addEventListener('devicemotion', function(e) {
-  if(!e.interval || !e.rotationRate){
+  if(!e.interval || !e.rotationRate || VRBu.pointerDown){
     return;
   }
   if(window.innerWidth > window.innerHeight){
@@ -144,6 +163,12 @@ window.addEventListener('load',function(){
   VRBu.renderer.domElement.addEventListener('mousemove',pointerMove);
   VRBu.renderer.domElement.addEventListener('mouseup',pointerOut);
   VRBu.renderer.domElement.addEventListener('mouseleave',pointerOut);
+
+  VRBu.renderer.domElement.addEventListener('touchstart',pointerDown);
+  VRBu.renderer.domElement.addEventListener('touchmove',pointerMove);
+  VRBu.renderer.domElement.addEventListener('touchend',pointerOut);
+  VRBu.renderer.domElement.addEventListener('touchcancel',pointerOut);
+
   VRBu.scene = scene;
   VRBu.camera = camera;
   requestAnimationFrame(render);
