@@ -101,6 +101,9 @@ function pointerOut(e){
 }
 
 window.addEventListener('devicemotion', function(e) {
+  if(!e.interval || !e.rotationRate){
+    return;
+  }
   if(window.innerWidth > window.innerHeight){
     VRBu.camera.camera.rotation.set(VRBu.camera.camera.rotation.x - e.rotationRate.beta / e.interval ,
       VRBu.camera.camera.rotation.y + e.rotationRate.alpha / e.interval,0);
